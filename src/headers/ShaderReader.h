@@ -2,12 +2,13 @@
 #define SHADER_READER_H
 
 #include <iostream>
+#include <fstream>
 #include <string>
 
 using namespace std;
 
-const string vertexShaderFilename = "vertexShader.txt";
-const string fragmentShaderFilename = "fragmentShader.txt";
+const string vertexShaderFilename = "..\\Lab01\\src\\shaders\\vertexShader.txt";
+const string fragmentShaderFilename = "..\\Lab01\\src\\shaders\\fragmentShader.txt";
 const string shaderFilenameNotFound = "shader Filename Not Found";
 
 class ShaderReader

@@ -52,58 +52,33 @@ void checkOpenGLError(std::string error)
 }
 
 /////////////////////////////////////////////////////////////////////// SHADERs
-const GLchar* vertShader;
-const GLchar* fragShader;
-
-const GLchar* VertexShader =
-{
-	"#version 330 core\n"
-
-	"in vec4 in_Position;\n"				
-	"uniform mat4 Matrix;\n"
-	"out vec4 color;\n"
-
-	"void main(void)\n"
-	"{\n"
-	"	color = in_Position;\n"
-	"	gl_Position = Matrix * in_Position;\n"
-
-	"}\n"
-};
-
-const GLchar* FragmentShader =
-{
-	"#version 330 core\n"
-
-	"in vec4 color;\n"
-	"out vec4 out_Color;\n"
-
-	"void main(void)\n"
-	"{\n"
-	"	out_Color = color;\n"
-	"}\n"
-};
+const GLchar* vertexShader;
+const GLchar* fragmentShader;
 
 //gets the shaders from external files
 void getShadersFromFiles()
 {
-	ShaderReader* reader = new ShaderReader();			//shaderReader objct where the shader text will be stored
-	vertShader = reader->ReadShader(reader->vertex);	//read vertex shader from file
-	fragShader = reader->ReadShader(reader->fragment);	//read fragment shader from file
-	cout << vertShader;
+	ShaderReader* vertexReader = new ShaderReader();			//shaderReader objct where the shader text will be stored (one per shader)
+	ShaderReader* fragmentReader = new ShaderReader();
+	
+	const char* vs = vertexReader->ReadShader(vertexReader->vertex);		//read vertex shader from file
+	const char* fs = fragmentReader->ReadShader(fragmentReader->fragment);	//read fragment shader from file
+	
+	vertexShader = vs;		//copy shader text to GLchar*
+	fragmentShader = fs;
 }
 void createShaderProgram()
 {
 	getShadersFromFiles();
 
 	VertexShaderId = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(VertexShaderId, 1, &VertexShader, 0);
-	//glShaderSource(VertexShaderId, 1, &vertShader, 0);
+	//glShaderSource(VertexShaderId, 1, &VertexShader, 0);
+	glShaderSource(VertexShaderId, 1, &vertexShader, 0);
 	glCompileShader(VertexShaderId);
 
 	FragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(FragmentShaderId, 1, &FragmentShader, 0);
-	//	glShaderSource(FragmentShaderId, 1, &fragShader, 0);
+	//glShaderSource(FragmentShaderId, 1, &FragmentShader, 0);
+	glShaderSource(FragmentShaderId, 1, &fragmentShader, 0);
 	glCompileShader(FragmentShaderId);
 
 	ProgramId = glCreateProgram();
