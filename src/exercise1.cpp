@@ -25,6 +25,7 @@ unsigned int FrameCount = 0;
 #define NORMAL_ATTRIB 1
 #define TEXTURE_COORD_ATTRIB 2
 
+GLuint VboID[2];
 GLuint VaoId, VboId[4];
 GLuint VertexShaderId, FragmentShaderId, ProgramId;
 GLint UniformId;
@@ -55,6 +56,11 @@ void checkOpenGLError(std::string error)
 const GLchar* vertexShader;
 const GLchar* fragmentShader;
 
+enum SHADER_TYPE {vertex, fragment}; 
+GLint success;
+GLchar infoLog[512];	//if there is any error during compilation, it will be stored here
+
+
 //gets the shaders from external files
 void getShadersFromFiles()
 {
@@ -67,20 +73,50 @@ void getShadersFromFiles()
 	vertexShader = vs;		//copy shader text to GLchar*
 	fragmentShader = fs;
 }
+
+void checkShaderCompilationStatus(SHADER_TYPE shaderToCheck) 
+{
+	switch(shaderToCheck){
+		case vertex:
+		{
+			glGetShaderiv(VertexShaderId, GL_COMPILE_STATUS, &success);	//check if the shader compiled
+			if (!success)
+			{
+				glGetShaderInfoLog(VertexShaderId, 512, NULL, infoLog);
+				cout << "VERTEX SHADER COMPILATION ERROR: " << infoLog << endl;
+			}
+		}
+		break;
+		case fragment:
+		{
+			glGetShaderiv(FragmentShaderId, GL_COMPILE_STATUS, &success);	//check if the shader compiled
+			if (!success)
+			{
+				glGetShaderInfoLog(FragmentShaderId, 512, NULL, infoLog);
+				cout << "FRAGMENT SHADER COMPILATION ERROR: " << infoLog << endl;
+			}
+		}
+		break;
+	}
+}
+
 void createShaderProgram()
 {
 	getShadersFromFiles();
-
+	
+	//vertex shader
 	VertexShaderId = glCreateShader(GL_VERTEX_SHADER);
-	//glShaderSource(VertexShaderId, 1, &VertexShader, 0);
 	glShaderSource(VertexShaderId, 1, &vertexShader, 0);
 	glCompileShader(VertexShaderId);
-
+	checkShaderCompilationStatus(vertex);
+	
+	//fragment shader
 	FragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
-	//glShaderSource(FragmentShaderId, 1, &FragmentShader, 0);
 	glShaderSource(FragmentShaderId, 1, &fragmentShader, 0);
 	glCompileShader(FragmentShaderId);
+	checkShaderCompilationStatus(fragment);
 
+	//shader program
 	ProgramId = glCreateProgram();
 	glAttachShader(ProgramId, VertexShaderId);
 	glAttachShader(ProgramId, FragmentShaderId);
@@ -113,8 +149,33 @@ void createBufferObjects()
 {
 	glGenVertexArrays(1, &VaoId);
 	glBindVertexArray(VaoId);
+	//****************************************************************
+	glGenBuffers(2, VboID);
 
-	glGenBuffers(4, VboId);
+//vertex coordinate, normal and texture buffer
+	glBindBuffer(GL_ARRAY_BUFFER, VboID[0]);	//binds the vertex attrs (GL_ARRAY_BUFFER), to the vbo
+	
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices) + sizeof(normals) + sizeof(texCoords), NULL, GL_STATIC_DRAW); //allocate memory for all the data we will be storing in the VBO
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);	//store info about the attrs in the buffer
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices), sizeof(normals), normals);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices) + sizeof(normals), sizeof(texCoords), texCoords);
+
+//data about vertex attrs is now stored, now we need to link the data in the vbos to the shader variables
+		glEnableVertexAttribArray(VERTEX_COORD_ATTRIB);
+		glVertexAttribPointer(VERTEX_COORD_ATTRIB, 4, GL_FLOAT, 0, 0, 0);
+
+		glEnableVertexAttribArray(NORMAL_ATTRIB);
+		glVertexAttribPointer(NORMAL_ATTRIB, 3, GL_FLOAT, 0, 0, (void *)sizeof(vertices));
+
+		glEnableVertexAttribArray(TEXTURE_COORD_ATTRIB);
+		glVertexAttribPointer(TEXTURE_COORD_ATTRIB, 2, GL_FLOAT, 0, 0, (void *) (sizeof(vertices) + sizeof(normals)));
+
+//index buffer
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VboID[1]); //binds the vertex array indices(GL_ELEMENT_ARRAY_BUFFER), to the vbo
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(faceIndex), faceIndex, GL_STATIC_DRAW);
+
+	//****************************************************************
+	/*glGenBuffers(4, VboId);
 
 //vertex coordinates buffer
 	glBindBuffer(GL_ARRAY_BUFFER, VboId[0]);
@@ -137,7 +198,7 @@ void createBufferObjects()
 	//index buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VboId[3]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(faceIndex), faceIndex, GL_STATIC_DRAW);
-
+	*/
 // unbind the VAO
 
 	glBindVertexArray(0);
@@ -229,9 +290,20 @@ void refresh(int value)
 
 void reshape(int w, int h)
 {
+	float ratio = w / h;
 	WinX = w;
 	WinY = h;
-	glViewport(0, 0, WinX, WinY);
+	/*if(ratio > 1){
+		WinY = WinY / ratio;
+		WinX = WinY;
+		glViewport(0, 0, (GLsizei) ratio * h, h);
+	}
+	else{
+		WinX = WinX / ratio;
+		WinY = WinX;
+		glViewport(0, 0, w, (GLsizei) w/ratio);
+	}*/
+	glViewport(0, 0, w, h);
 }
 
 void timer(int value)

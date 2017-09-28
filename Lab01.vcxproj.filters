@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\headers\cube.h">
+    <ClInclude Include="src\headers\ShaderReader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\headers\ShaderReader.h">
+    <ClInclude Include="src\headers\cube.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

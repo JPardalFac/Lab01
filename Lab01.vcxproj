@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\headers\cube.h" />
+    <ClInclude Include="src\headers\cube.h" />
     <ClInclude Include="src\headers\ShaderReader.h" />
   </ItemGroup>
   <ItemGroup>
